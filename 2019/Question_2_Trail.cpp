@@ -1,251 +1,265 @@
 #include <iostream>
-#include <utility>
-#include <vector>
-#include <iostream>
 #include <string>
 #include <sstream>
+#include <vector>
+#include<utility>
 
 
-//God fucking help me, there's a bug to do with the rotations required after a move not being able to be met. Need to fix but lack motivation..
 
 class Game {
 public:
-	//Variables
-	std::pair<int, int> coordinates;
-	char facing;
-	std::vector<std::pair<int, int>> path;
-	int game_path_vanish;
-	std::pair<int, int> next_coordinates;
-	char auxFace;
-	bool endProgramBool = false;
+	int x;
+	int y;
+	char face = 'U';
+	std::vector<int> pathX;
+	std::vector<int> pathY;
 
-	//Drivers to initialise the game
-	void coordinatesDriver(){
-		coordinates.first = 0; //x
-		coordinates.second = 0; //y
+	int trailRate;
 
-	}
+	int new_x;
+	int new_y;
 
-	void facingDriver() {
-		facing = 'U';
+
+	void moveUp() {
+		y = y + 1;
 	}
 
-	void pathDriver(int path_vanish) {
-		game_path_vanish = path_vanish;
-		path.push_back(coordinates);
+	void moveDown() {
+		y = y - 1;
 	}
 
-	//Move commands
-	void MoveUp() {
-		coordinates.second = coordinates.second + 1;
-	}
-	void MoveDown() {
-		coordinates.second = coordinates.second - 1;
-	}
-	void MoveLeft() {
-		coordinates.first = coordinates.first - 1;
-	}
-	void MoveRight() {
-		coordinates.first = coordinates.first + 1;
+	void moveRight() {
+		x = x + 1;
 	}
 
-	void nextUp() {
-		next_coordinates.second = next_coordinates.second + 1;
-	}
-	void nextDown() {
-		next_coordinates.second = next_coordinates.second - 1;
-	}
-	void nextLeft() {
-		next_coordinates.first = next_coordinates.first - 1;
-	}
-	void nextRight() {
-		next_coordinates.first = next_coordinates.first + 1;
+	void moveLeft() {
+		x = x - 1;
 	}
 
-	void decideMove() {
-		if (facing == 'U') {
-			nextUp();
-			if (availablePath()) {
-				MoveUp();
-				path_adder();
-			}
-			else {
-				auxMoves();
-			}
-		}
-		else if (facing == 'R') {
-			nextRight();
-			if (availablePath()) {
-				MoveRight();
-				path_adder();
-			}
-			else {
-				auxMoves();
-			}
-		}
-		else if (facing == 'L') {
-			nextLeft();
-			if (availablePath()) {
-				MoveLeft();
-				path_adder();
-			}
-			else {
-				auxMoves();
-			}
-		}
-		else if (facing == 'D') {
-			nextDown();
-			if (availablePath()) {
-				MoveDown();
-				path_adder();
-			}
-			else {
-				auxMoves();
-			}
+	void moveNewUp() {
+		new_y = y + 1;
+		new_x = x;
+	}
+	void moveNewDown() {
+		new_y = y - 1;
+		new_x = x;
+	}
+	void moveNewRight() {
+		new_x = x + 1;
+		new_y = y;
+	}
+	void moveNewLeft() {
+		new_x = x - 1;
+		new_y = y;
+	}
+
+	void moveHelper() {
+		switch (face) {
+		case 'U':
+			moveUp();
+			break;
+		case 'D':
+			moveDown();
+			break;
+		case 'R':
+			moveRight();
+			break;
+		case 'L':
+			moveLeft();
+			break;
 		}
 	}
 
-	void auxMoves() {
-		if (auxFace == 'R') {
-			endProgram();
-
+	void moveChecker() {
+		switch (face) {
+		case 'U':
+			moveNewUp();
+			break;
+		case 'D':
+			moveNewDown();
+			break;
+		case 'R':
+			moveNewRight();
+			break;
+		case 'L':
+			moveNewLeft();
+			break;
 		}
-		auxFace = 'R';
-		changeFace(auxFace);
-		decideMove();
-
 	}
 
-	void endProgram() {
-		endProgramBool = true;
-	}
+	void faceHelper(char ch) {
+		std::vector<char> facings = { 'U', 'R', 'D', 'L' };
+		// 0    1    2    3
+		int current_index;
+		int new_index;
+		char new_face;
 
-	void changeFace(char ch) {
+		//Left - 1;
+		// Right + 1;
+
+		for (int i = 0; i < 4; i++) {
+			if (facings[i] == face) {
+				current_index = i;
+			}
+		}
 		if (ch == 'L') {
-			if (facing == 'U') {
-				facing = 'L';
-				decideMove();
+			new_index = (current_index + 3) % 4;
+			if (new_index == -1) {
+				new_index = 3;
+				new_face = facings[new_index];
+				face = new_face;
 			}
-			else if (facing == 'R') {
-				facing = 'U';
-				decideMove();
-			}
-			else if (facing == 'D') {
-				facing = 'R';
-				decideMove();
-			} 
-			else if (facing == 'L') {
-				facing = 'D';
-				decideMove();
+			else {
+				new_face = facings[new_index];
+				face = new_face;
 			}
 		}
-		else if (ch == 'R') {
-				if (facing == 'U') {
-					facing = 'R';
-					decideMove();
-				}
-				else if (facing == 'R') {
-					facing = 'D';
-					decideMove();
-				}
-				else if (facing == 'D') {
-					facing = 'L';
-					decideMove();
+		if (ch == 'R') {
+			new_index = (current_index + 1) % 4;
+			new_face = facings[new_index];
+			face = new_face;
+		}
 
-				}
-				else if (facing == 'L') {
-					facing = 'U';
-					decideMove();
-				}
-			}
-		
-		else if (ch == 'F') {
-			decideMove();
-		}
+
 	}
 
-	//Path commands
-	void path_adder() {
-		if (Is_Path_Full() == true) {
-			path.erase(path.begin());
-			path.push_back(coordinates);
+	void pathTrack() {
+		if (pathX.size() >= trailRate - 1) {
+			pathX.erase(pathX.begin());
+			pathX.push_back(x);
 		}
 		else {
-			path.push_back(coordinates);
+			pathX.push_back(x);
+		}
+
+		if (pathY.size() >= trailRate - 1) {
+			pathY.erase(pathY.begin());
+			pathY.push_back(y);
+		}
+		else {
+			pathY.push_back(y);
 		}
 	}
 
-	bool availablePath(){
-		for (int i = 0; i < path.size(); i++) {
-			if (path[i].first == next_coordinates.first && path[i].second == next_coordinates.second) {
+	void AuxiliaryMoves() {
+		char ch = 'R';
+		bool canMove = false;
+
+		for (int i = 0; i < 4; i++) {
+			faceHelper(ch);
+			moveChecker();
+			if (isValid()) {
+				canMove = true;
+				pathTrack();
+				moveHelper();
+				break;
+			}
+
+		}
+		if (canMove) {
+			return;
+		}
+		else {
+			//Game Over
+			std::cout << "(" << x << ", " << y << ")" << std::endl;
+			std::cout << "Cannot make any more moves" << std::endl;
+			exit(0);
+		}
+
+
+	}
+
+	bool isValid() {
+		//We have new x and new y
+		//Check if present in both coord vectors
+
+		for (int i = 0; i < pathX.size(); i++) {
+			if (new_x == pathX[i] && new_y == pathY[i]) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	bool Is_Path_Full() {
-		if (path.size() == game_path_vanish) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	}
 
-	//Utility commands
-	void printCurrent() {
-		std::cout << "(" << coordinates.first << ", " << coordinates.second << ")" << std::endl;
-		std::cout << facing;
-	}
+
 
 
 };
 
+
+
+
 int main() {
-	//Declaring inputs for use
-	int path_vanish;
 	std::string commands;
+	std::string str;
+	std::stringstream ss;
 	int moves;
 	char ch;
 
-	//Now onto inputting
-	std::string str;
-	std::stringstream ss;
+	int trailRate;
+
 
 	std::getline(std::cin, str);
 	ss << str;
-	ss >> path_vanish;
+	ss >> trailRate;
 	ss >> commands;
 	ss >> moves;
 
 	//Initialise game
 	Game game;
-	game.coordinatesDriver();
-	game.facingDriver();
-	game.pathDriver(path_vanish);
+	game.trailRate = trailRate;
+	game.x = 0;
+	game.y = 0;
+	game.face = 'U';
+	int counter = moves;
 
-	for (int i = 0; i < moves; i++) {
-		for (int y = 0; y < commands.size(); y++) {
-			if (game.endProgramBool == true) {
-				game.printCurrent();
-				return 0;
+		for (int x = 0; x < commands.size(); x++) {
+			if (counter == 0) {
+				break;
 			}
-			if (commands[y] == 'F') {
-				ch = 'F';
-				game.changeFace(ch);
-			} if (commands[y] == 'L') {
-				ch = 'L';
-				game.changeFace(ch);
-			} if (commands[y] == 'R') {
-				ch = 'R';
-				game.changeFace(ch);
+			ch = commands[x];
+			game.faceHelper(ch);
+			game.moveChecker();
+			if (game.isValid()) {
+				game.pathTrack();
+				game.moveHelper();
+			} else{
+				game.AuxiliaryMoves();
+
 			}
+			counter--;
 		}
 
-	}
-	game.printCurrent();
+		while (counter != 0) {
+			for (int x = 0; x < commands.size(); x++) {
+				if (counter == 0) {
+					break;
+				}
+				ch = commands[x];
+				game.faceHelper(ch);
+				game.moveChecker();
+				if (game.isValid()) {
+					game.pathTrack();
+					game.moveHelper();
+				}
+				else {
+					game.AuxiliaryMoves();
+
+				}
+				counter--;
+			}
+		}
 	
+	std::cout << "(" << game.x << ", " << game.y << ")" << std::endl;
+
+
+
+
+
+
+
+
 
 	return 0;
 }
